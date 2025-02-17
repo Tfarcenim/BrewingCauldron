@@ -17,6 +17,7 @@ public class ModBlockStateProvider extends BlockStateProvider {
     @Override
     protected void registerStatesAndModels() {
         simpleBlock(Init.ModBlocks.BREWING_CAULDRON,models().getExistingFile(mcLoc("block/cauldron")));
+        simpleBlock(Init.ModBlocks.LAVA_BREWING_CAULDRON,models().getExistingFile(mcLoc("block/lava_cauldron")));
 
         getVariantBuilder(Init.ModBlocks.WATER_BREWING_CAULDRON).forAllStatesExcept(state -> {
 
@@ -26,6 +27,21 @@ public class ModBlockStateProvider extends BlockStateProvider {
                 modelFile = models().getExistingFile(mcLoc("block/water_cauldron_level" + state.getValue(LayeredCauldronBlock.LEVEL)));
             } else {
                 modelFile = models().getExistingFile(mcLoc("block/water_cauldron_full"));
+
+            }
+
+
+            return ConfiguredModel.builder().modelFile(modelFile).build();
+        });
+
+        getVariantBuilder(Init.ModBlocks.POWDER_SNOW_BREWING_CAULDRON).forAllStatesExcept(state -> {
+
+            ModelFile modelFile;
+
+            if (state.getValue(LayeredCauldronBlock.LEVEL)<3){
+                modelFile = models().getExistingFile(mcLoc("block/powder_snow_cauldron_level" + state.getValue(LayeredCauldronBlock.LEVEL)));
+            } else {
+                modelFile = models().getExistingFile(mcLoc("block/powder_snow_cauldron_full"));
 
             }
 

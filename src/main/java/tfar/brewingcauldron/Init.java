@@ -1,5 +1,6 @@
 package tfar.brewingcauldron;
 
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -26,6 +27,10 @@ public class Init {
         public static final Block WATER_BREWING_CAULDRON = new WaterBrewingCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON), LayeredCauldronBlock.RAIN, CauldronInteractions.WATER_BREWING);
         public static final Block LAVA_BREWING_CAULDRON = new LavaBrewingCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON).lightLevel(state -> 15), CauldronInteractions.LAVA_BREWING);
         public static final Block POWDER_SNOW_BREWING_CAULDRON = new PowderSnowBrewingCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON),LayeredCauldronBlock.SNOW, CauldronInteractions.POWDER_SNOW_BREWING);
+    }
+
+    public static class ModMenuTypes {
+        public static final MenuType<BrewingCauldronMenu> BREWING_CAULDRON = new MenuType<>(BrewingCauldronMenu::new);
     }
 
 }

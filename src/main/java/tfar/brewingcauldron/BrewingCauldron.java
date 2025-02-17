@@ -2,6 +2,7 @@ package tfar.brewingcauldron;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -12,9 +13,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
 import tfar.brewingcauldron.block.CauldronInteractions;
+import tfar.brewingcauldron.client.ModClient;
 import tfar.brewingcauldron.datagen.ModDataGenerator;
+import tfar.brewingcauldron.network.PacketHandler;
 
 
 @Mod(BrewingCauldron.MOD_ID)
@@ -30,8 +34,12 @@ public class BrewingCauldron {
         bus.addGenericListener(Block.class,this::registerBlocks);
         bus.addGenericListener(BlockEntityType.class,this::registerBlockEntities);
         bus.addGenericListener(Item.class,this::registerItems);
+        bus.addGenericListener(MenuType.class,this::registerMenuTypes);
 
         bus.addListener(ModDataGenerator::gatherData);
+        if (FMLEnvironment.dist.isClient()){
+            ModClient.init(bus);
+        }
         MinecraftForge.EVENT_BUS.addListener(this::rightClick);
     }
 
@@ -51,7 +59,11 @@ public class BrewingCauldron {
     }
 
     void registerBlockEntities(RegistryEvent.Register<BlockEntityType<?>> event) {
+        event.getRegistry().registerAll(Init.ModBlockEntityTypes.BREWING_CAULDRON.setRegistryName("brewing_cauldron"));
+    }
 
+    void registerMenuTypes(RegistryEvent.Register<MenuType<?>> event) {
+        event.getRegistry().registerAll(Init.ModMenuTypes.BREWING_CAULDRON.setRegistryName("brewing_cauldron"));
     }
 
     void registerItems(RegistryEvent.Register<Item> event) {
@@ -62,5 +74,6 @@ public class BrewingCauldron {
 
     private void setup(final FMLCommonSetupEvent event) {
         CauldronInteractions.bootStrap();
+        PacketHandler.registerPackets();
     }
 }
