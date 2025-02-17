@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
+import tfar.brewingcauldron.block.CauldronInteractions;
 import tfar.brewingcauldron.datagen.ModDataGenerator;
 
 
@@ -42,7 +43,11 @@ public class BrewingCauldron {
     }
 
     void registerBlocks(RegistryEvent.Register<Block> event) {
-        event.getRegistry().registerAll(Init.ModBlocks.BREWING_CAULDRON.setRegistryName("brewing_cauldron"));
+        event.getRegistry().registerAll(
+                Init.ModBlocks.BREWING_CAULDRON.setRegistryName("brewing_cauldron"),
+                Init.ModBlocks.WATER_BREWING_CAULDRON.setRegistryName("water_brewing_cauldron"),
+                Init.ModBlocks.LAVA_BREWING_CAULDRON.setRegistryName("lava_brewing_cauldron"),
+                Init.ModBlocks.POWDER_SNOW_BREWING_CAULDRON.setRegistryName("powder_snow_brewing_cauldron"));
     }
 
     void registerBlockEntities(RegistryEvent.Register<BlockEntityType<?>> event) {
@@ -56,6 +61,6 @@ public class BrewingCauldron {
     }
 
     private void setup(final FMLCommonSetupEvent event) {
-
+        CauldronInteractions.bootStrap();
     }
 }

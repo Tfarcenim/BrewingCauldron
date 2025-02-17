@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "brewingcauldron:brewing_cauldron",
+    "brewingcauldron:water_brewing_cauldron",
+    "brewingcauldron:lava_brewing_cauldron",
+    "brewingcauldron:powder_snow_brewing_cauldron"
+  ]
+}
