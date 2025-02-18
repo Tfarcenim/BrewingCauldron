@@ -181,15 +181,14 @@ public class CauldronInteractions {
                         } else  {
                             potionStack.setTag(fluidStack.getTag());
                         }
-
-                        player.setItemInHand(hand,potionStack);
+                        player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, potionStack));
+                        //player.setItemInHand(hand,potionStack);
                         brewingBE.handler.bottles--;
                         if (brewingBE.handler.bottles<=0) {
                             brewingBE.handler.setFluidInSlot(0,FluidStack.EMPTY);
                         } else {
                             brewingBE.setChanged();
                         }
-                            //player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, PotionUtils.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
                             player.awardStat(Stats.USE_CAULDRON);
                         player.awardStat(Stats.ITEM_USED.get(item));
 

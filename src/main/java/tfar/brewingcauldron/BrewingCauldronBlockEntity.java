@@ -124,7 +124,12 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
                 FluidStack fluidStack = handler.fluidStack;
                 //empty cauldron
                 if (fluidStack.isEmpty()) {
-
+                    if (input.is(Items.POTION)) {
+                        handler.bottles++;
+                        handler.setFluidInSlot(0,new FluidStack(Init.ModFluids.POTION,FluidAttributes.BUCKET_VOLUME,input.getTag()));
+                        handler.extractItem(BrewingHandler.BOTTLE_INPUT,1,false);
+                        handler.setStackInSlot(BrewingHandler.BOTTLE_OUTPUT,new ItemStack(Items.GLASS_BOTTLE));
+                    }
                 } else {
                     //empty glass bottles
                     if (input.is(Items.GLASS_BOTTLE)) {
@@ -136,9 +141,18 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
                             handler.setStackInSlot(BrewingHandler.BOTTLE_OUTPUT,potionStack);
                             handler.extractItem(BrewingHandler.BOTTLE_INPUT,1,false);
                             handler.bottles--;
-                            setChanged();
                             if (handler.bottles <= 0) {
                                 handler.setFluidInSlot(0,FluidStack.EMPTY);
+                            } else {
+                                setChanged();
+                            }
+                        }
+                    } else if (input.is(Items.POTION)) {
+                        if (fluidStack.getFluid() == Fluids.WATER || fluidStack.getFluid() == Init.ModFluids.POTION) {
+                            if (handler.bottles < 3 && PotionUtils2.haveSameEffects(input,fluidStack) || fluidStack.getFluid() == Fluids.WATER && PotionUtils.getPotion(input) == Potions.WATER) {
+                                handler.bottles++;
+                                handler.extractItem(BrewingHandler.BOTTLE_INPUT, 1, false);
+                                handler.setStackInSlot(BrewingHandler.BOTTLE_OUTPUT, new ItemStack(Items.GLASS_BOTTLE));
                             }
                         }
                     }
@@ -302,7 +316,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public Component getDisplayName() {
-        return getBlockState().getBlock().getName();
+        return Init.ModBlocks.BREWING_CAULDRON.getName();
     }
 
     @org.jetbrains.annotations.Nullable
