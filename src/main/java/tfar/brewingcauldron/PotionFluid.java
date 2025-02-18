@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
@@ -101,6 +102,18 @@ public class PotionFluid extends Fluid {
                 return potion.getName(Items.POTION.getDescriptionId() + ".effect.");
             }
             return super.getTranslationKey(stack);
+        }
+
+        @Override
+        public ItemStack getBucket(FluidStack stack) {
+            ItemStack bucket = super.getBucket(stack);
+            bucket.setTag(stack.getTag());
+            return bucket;
+        }
+
+        @Override
+        public int getColor(FluidStack stack) {
+            return PotionUtils2.getColor(stack.getTag());
         }
     }
 }

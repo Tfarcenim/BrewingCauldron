@@ -37,12 +37,18 @@ public class ModLootTableProvider extends LootTableProvider {
 
         @Override
         protected Iterable<Block> getKnownBlocks() {
-            return List.of(Init.ModBlocks.BREWING_CAULDRON);
+            return List.of(Init.ModBlocks.BREWING_CAULDRON,
+                    Init.ModBlocks.WATER_BREWING_CAULDRON,
+                    Init.ModBlocks.LAVA_BREWING_CAULDRON,
+                    Init.ModBlocks.POWDER_SNOW_BREWING_CAULDRON);
         }
 
         @Override
         protected void addTables() {
             dropSelf(Init.ModBlocks.BREWING_CAULDRON);
+            this.dropOther(Init.ModBlocks.WATER_BREWING_CAULDRON, Init.ModBlocks.BREWING_CAULDRON);
+            this.dropOther(Init.ModBlocks.LAVA_BREWING_CAULDRON, Init.ModBlocks.BREWING_CAULDRON);
+            this.dropOther(Init.ModBlocks.POWDER_SNOW_BREWING_CAULDRON, Init.ModBlocks.BREWING_CAULDRON);
         }
     }
 }

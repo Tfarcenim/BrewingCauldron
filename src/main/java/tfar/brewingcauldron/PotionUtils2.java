@@ -6,6 +6,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,5 +45,17 @@ public class PotionUtils2 {
     private static CompoundTag saveColor(CompoundTag tag, int color) {
         tag.putInt(PotionUtils.TAG_CUSTOM_POTION_COLOR,color);
         return tag;
+    }
+
+    /**
+     * Gets the integer color of an {@code ItemStack} as defined by it's stored potion color tag
+     * @param pStack the passed {@code ItemStack}
+     */
+    public static int getColor(CompoundTag tag) {
+        if (tag != null && tag.contains("CustomPotionColor", 99)) {
+            return tag.getInt("CustomPotionColor");
+        } else {
+            return PotionUtils.getPotion(tag) == Potions.EMPTY ? 0xf800f8 : PotionUtils.getColor(PotionUtils.getAllEffects(tag));
+        }
     }
 }

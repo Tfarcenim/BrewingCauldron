@@ -1,14 +1,14 @@
 package tfar.brewingcauldron;
 
-import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -32,15 +32,8 @@ import net.minecraftforge.fluids.FluidStack;
 import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvider {
-
-    protected Potion potion = Potions.EMPTY;
-    protected Integer customPotionColor;
-    protected List<MobEffectInstance> customEffects = new ArrayList<>();
 
     int brewTime;
     int fuel;
@@ -87,6 +80,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         boolean flag1 = brewTime > 0;
         ItemStack itemstack1 = handler.getStackInSlot(BrewingHandler.INGREDIENT);
         if (flag1) {
+            ((ServerLevel)level).sendParticles(ParticleTypes.BUBBLE, (double)worldPosition.getX() + level.random.nextDouble(), (double)(worldPosition.getY() + 1), (double)worldPosition.getZ() + level.random.nextDouble(), 1, 0.0D, 0.01D, 0.0D, 0.2D);
             --brewTime;
             boolean flag2 = brewTime == 0;
             if (flag2 && flag) {
@@ -214,43 +208,9 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     public BrewingCauldronBlockEntity(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) {
         super(pType, pPos, pBlockState);
     }
-    @Nonnull
-    public Potion getPotion() {
-        return potion;
-    }
-
-    public void setPotion(@Nonnull Potion potion) {
-        this.potion = potion;
-        setChanged();
-    }
-
-    public List<MobEffectInstance> getCustomEffects() {
-        return customEffects;
-    }
-
-    public void setCustomEffects(List<MobEffectInstance> customEffects) {
-        this.customEffects = customEffects;
-        setChanged();
-    }
 
     public int getColor() {
-        if (customPotionColor != null) {
-            return customPotionColor;
-        }
-        else if (potion == Potions.WATER) {
-            return BiomeColors.getAverageWaterColor(level, worldPosition);
-        } else {
-            return PotionUtils.getColor(potion);
-        }
-    }
-
-    @Nullable
-    public Integer getCustomPotionColor() {
-        return customPotionColor;
-    }
-
-    public void setCustomPotionColor(@Nullable Integer customPotionColor) {
-        this.customPotionColor = customPotionColor;
+        return handler.fluidStack.getFluid().getAttributes().getColor(handler.fluidStack);
     }
 
     @Override
@@ -273,14 +233,10 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public void load(CompoundTag nbt) {
-        potion = PotionUtils.getPotion(nbt);
-        customEffects = PotionUtils.getCustomEffects(nbt);
-        if (nbt.contains(PotionUtils.TAG_CUSTOM_POTION_COLOR)) {
-            customPotionColor = nbt.getInt(PotionUtils.TAG_CUSTOM_POTION_COLOR);
-        }
 
         handler.deserializeNBT(nbt.getCompound("handler"));
-
+        this.brewTime = nbt.getShort("BrewTime");
+        this.fuel = nbt.getByte("Fuel");
         super.load(nbt);
         if (hasLevel())
             level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
@@ -288,8 +244,10 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
 
     @Override
     public void saveAdditional(CompoundTag compound) {
-        PotionUtils2.saveAllEffects(compound, potion, customEffects,customPotionColor);
+
         compound.put("handler",handler.serializeNBT());
+        compound.putShort("BrewTime", (short)this.brewTime);
+        compound.putByte("Fuel", (byte)this.fuel);
         super.saveAdditional(compound);
     }
 

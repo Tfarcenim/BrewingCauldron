@@ -2,9 +2,9 @@ package tfar.brewingcauldron;
 
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
@@ -12,12 +12,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Fluid;
 import tfar.brewingcauldron.block.*;
+import tfar.brewingcauldron.item.PotionBucketItem;
 
 public class Init {
 
     public static class ModItems{
         public static final Item BREWING_CAULDRON = new BlockItem(ModBlocks.BREWING_CAULDRON,new Item.Properties().tab(CreativeModeTab.TAB_BREWING));
-        public static final Item POTION_BUCKET = new BucketItem(() -> ModFluids.POTION,new Item.Properties().stacksTo(1));
+        public static final Item POTION_BUCKET = new PotionBucketItem(() -> ModFluids.POTION,new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1));
     }
 
     public static class ModBlockEntityTypes {

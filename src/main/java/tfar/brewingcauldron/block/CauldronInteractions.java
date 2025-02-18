@@ -123,14 +123,11 @@ public class CauldronInteractions {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             if (blockEntity instanceof BrewingCauldronBlockEntity brewingCauldronBlockEntity) {
                 //brewingCauldronBlockEntity.
-                FluidActionResult fluidActionResult = FluidUtil.tryEmptyContainerAndStow(pFilledStack, brewingCauldronBlockEntity.handler, new InvWrapper(pPlayer.getInventory()), 1000, pPlayer, false);
+                FluidActionResult fluidActionResult = FluidUtil.tryEmptyContainerAndStow(pFilledStack, brewingCauldronBlockEntity.handler, new InvWrapper(pPlayer.getInventory()), 1000, pPlayer, true);
                 if (fluidActionResult.isSuccess()) {
                     pPlayer.setItemInHand(pHand,fluidActionResult.getResult());
                 }
             }
-
-            pLevel.playSound(null, pPos, pEmptySound, SoundSource.BLOCKS, 1.0F, 1.0F);
-            pLevel.gameEvent(null, GameEvent.FLUID_PLACE, pPos);
         }
 
         return InteractionResult.sidedSuccess(pLevel.isClientSide);

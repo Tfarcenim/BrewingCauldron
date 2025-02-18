@@ -5,10 +5,8 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.*;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
@@ -115,6 +113,65 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
     public boolean stillValid(Player pPlayer) {
         return true;
 
+    }
+
+    /**
+     * Handle when the stack in slot {@code index} is shift-clicked. Normally this moves the stack between the player
+     * inventory and the other inventory(s).
+     */
+    @Override
+    public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
+        ItemStack itemstack = ItemStack.EMPTY;
+        Slot slot = this.slots.get(pIndex);
+        if (slot != null && slot.hasItem()) {
+            ItemStack itemstack1 = slot.getItem();
+            itemstack = itemstack1.copy();
+            if ((pIndex < 0 || pIndex > 1) && pIndex != 3 && pIndex != 4) {
+                if (BrewingStandMenu.FuelSlot.mayPlaceItem(itemstack)) {
+                    if (this.moveItemStackTo(itemstack1, 3, 4, false) || this.ingredientSlot.mayPlace(itemstack1) && !this.moveItemStackTo(itemstack1, 3, 4, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (this.ingredientSlot.mayPlace(itemstack1)) {
+                    if (!this.moveItemStackTo(itemstack1, 2, 3, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (BrewingStandMenu.PotionSlot.mayPlaceItem(itemstack)) {
+                    if (!this.moveItemStackTo(itemstack1, 0, 1, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (pIndex >= 4 && pIndex < 31) {
+                    if (!this.moveItemStackTo(itemstack1, 31, 40, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (pIndex >= 31 && pIndex < 40) {
+                    if (!this.moveItemStackTo(itemstack1, 4, 31, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (!this.moveItemStackTo(itemstack1, 4, 40, false)) {
+                    return ItemStack.EMPTY;
+                }
+            } else {
+                if (!this.moveItemStackTo(itemstack1, 4, 40, true)) {
+                    return ItemStack.EMPTY;
+                }
+
+                slot.onQuickCraft(itemstack1, itemstack);
+            }
+
+            if (itemstack1.isEmpty()) {
+                slot.set(ItemStack.EMPTY);
+            } else {
+                slot.setChanged();
+            }
+
+            if (itemstack1.getCount() == itemstack.getCount()) {
+                return ItemStack.EMPTY;
+            }
+
+            slot.onTake(pPlayer, itemstack1);
+        }
+
+        return itemstack;
     }
 
     public void initializeFluids(int stateID, List<FluidStack> stacks) {

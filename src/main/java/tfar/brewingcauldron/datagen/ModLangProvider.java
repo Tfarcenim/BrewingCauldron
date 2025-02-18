@@ -25,6 +25,7 @@ public class ModLangProvider extends LanguageProvider {
         addDefaultBlock(() -> Init.ModBlocks.WATER_BREWING_CAULDRON);
         addDefaultBlock(() -> Init.ModBlocks.LAVA_BREWING_CAULDRON);
         addDefaultBlock(() -> Init.ModBlocks.POWDER_SNOW_BREWING_CAULDRON);
+        addDefaultItem(() -> Init.ModItems.POTION_BUCKET);
     }
 
     protected void addDefaultItem(Supplier<? extends Item> supplier) {

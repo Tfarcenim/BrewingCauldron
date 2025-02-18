@@ -3,6 +3,7 @@ package tfar.brewingcauldron;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.BrewingStandMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
@@ -10,6 +11,7 @@ import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
+import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -26,7 +28,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
 
     Predicate<FluidStack> allowed = fluidStack1 -> {
         Fluid fluid = fluidStack1.getFluid();
-        return fluid == Fluids.WATER || fluid == Fluids.LAVA;
+        return fluid == Fluids.WATER || fluid == Init.ModFluids.POTION || fluid == Fluids.LAVA;
     };
 
     public static final int BOTTLE_INPUT = 0;
@@ -93,7 +95,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     @NotNull
     @Override
     public FluidStack drain(FluidStack resource, FluidAction action) {
-        if (resource.getAmount() < FluidAttributes.BUCKET_VOLUME) {
+        if (resource.getAmount() < FluidAttributes.BUCKET_VOLUME || !isFull()) {
             return FluidStack.EMPTY;
         }
 
@@ -108,10 +110,18 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
         return FluidStack.EMPTY;
     }
 
+    boolean isFull() {
+        BlockState state = be.getBlockState();
+        if (state.getBlock() instanceof WaterBrewingCauldronBlock) {
+            return state.getValue(WaterBrewingCauldronBlock.LEVEL) == 3;
+        }
+        return true;
+    }
+
     @NotNull
     @Override
     public FluidStack drain(int maxDrain, FluidAction action) {
-        if (maxDrain < FluidAttributes.BUCKET_VOLUME) {
+        if (maxDrain < FluidAttributes.BUCKET_VOLUME|| !isFull()) {
             return FluidStack.EMPTY;
         }
 
