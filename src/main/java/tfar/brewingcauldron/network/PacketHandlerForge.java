@@ -1,12 +1,15 @@
 package tfar.brewingcauldron.network;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 import tfar.brewingcauldron.BrewingCauldron;
+import tfar.brewingcauldron.MLFluidStack;
 import tfar.brewingcauldron.network.client.S2CModPacket;
 import tfar.brewingcauldron.network.server.C2SModPacket;
 
@@ -50,6 +53,28 @@ public class PacketHandlerForge {
 
     public static  <MSG extends C2SModPacket> void registerServerPacket(Class<MSG> packetLocation, Function<FriendlyByteBuf, MSG> reader) {
         PacketHandlerForge.INSTANCE.registerMessage(i++, packetLocation, MSG::write, reader, PacketHandlerForge.wrapC2S());
+    }
+
+    public static FluidStack convert(MLFluidStack fluidStack) {
+        if (fluidStack.isEmpty()) {
+            return FluidStack.EMPTY;
+        }
+        return new FluidStack(fluidStack.getFluid(), fluidStack.getAmount(), fluidStack.getTag());
+    }
+
+    public static MLFluidStack convert(FluidStack fluidStack) {
+        if (fluidStack.isEmpty()) {
+            return MLFluidStack.EMPTY;
+        }
+        return new MLFluidStack(fluidStack.getFluid(), fluidStack.getAmount(), fluidStack.getTag());
+    }
+
+    public static Component getDisplayName(MLFluidStack fluidStack) {
+        return convert(fluidStack).getDisplayName();
+    }
+
+    public static String getTranslationKey(MLFluidStack fluidStack) {
+        return convert(fluidStack).getTranslationKey();
     }
 
 }

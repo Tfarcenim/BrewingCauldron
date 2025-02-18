@@ -2,9 +2,11 @@ package tfar.brewingcauldron;
 
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,15 +21,18 @@ import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BrewingStandBlock;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvider {
@@ -70,51 +75,107 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public void serverTick() {
-        ItemStack itemstack = itemStackHandler.getStackInSlot(BrewingHandler.FUEL);
+        ItemStack itemstack = handler.getStackInSlot(BrewingHandler.FUEL);
         if (fuel <= 0 && itemstack.is(Items.BLAZE_POWDER)) {
             fuel = 20;
             itemstack.shrink(1);
             setChanged();
         }
 
-        boolean flag = isBrewable(pBlockEntity.items);
-        boolean flag1 = pBlockEntity.brewTime > 0;
-        ItemStack itemstack1 = pBlockEntity.items.get(3);
+        boolean flag = isBrewable();
+        boolean flag1 = brewTime > 0;
+        ItemStack itemstack1 = handler.getStackInSlot(BrewingHandler.INGREDIENT);
         if (flag1) {
             --brewTime;
             boolean flag2 = brewTime == 0;
             if (flag2 && flag) {
-                doBrew(pLevel, pPos, pBlockEntity.items);
-                setChanged(pLevel, pPos, pState);
-            } else if (!flag || !itemstack1.is(pBlockEntity.ingredient)) {
-                pBlockEntity.brewTime = 0;
-                setChanged(pLevel, pPos, pState);
+                doBrew();
+                setChanged();
+            } else if (!flag || !itemstack1.is(ingredient)) {
+                brewTime = 0;
+                setChanged();
             }
-        } else if (flag && pBlockEntity.fuel > 0) {
+        } else if (flag && fuel > 0) {
             --fuel;
             brewTime = 400;
             ingredient = itemstack1.getItem();
             setChanged();
         }
 
-        boolean[] aboolean = pBlockEntity.getPotionBits();
-        if (!Arrays.equals(aboolean, pBlockEntity.lastPotionCount)) {
-            pBlockEntity.lastPotionCount = aboolean;
-            BlockState blockstate = pState;
-            if (!(pState.getBlock() instanceof BrewingStandBlock)) {
-                return;
-            }
-
-
            // level.setBlock(worldPosition, blockstate, 2);
+
+    }
+
+    private static final int[] SLOTS_FOR_SIDES = new int[]{0, 1, 2, 4};
+
+
+    private void doBrew() {
+        NonNullList<ItemStack> wrapper = makeWrapper();
+        if (net.minecraftforge.event.ForgeEventFactory.onPotionAttemptBrew(wrapper)) return;
+        ItemStack itemstack = wrapper.get(3);
+
+        net.minecraftforge.common.brewing.BrewingRecipeRegistry.brewPotions(wrapper, itemstack, SLOTS_FOR_SIDES);
+        net.minecraftforge.event.ForgeEventFactory.onPotionBrewed(wrapper);
+        if (itemstack.hasContainerItem()) {
+            ItemStack itemstack1 = itemstack.getContainerItem();
+            itemstack.shrink(1);
+            if (itemstack.isEmpty()) {
+                itemstack = itemstack1;
+            } else {
+                Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), itemstack1);
+            }
         }
+        else itemstack.shrink(1);
+
+        wrapper.set(3, itemstack);
+        level.levelEvent(LevelEvent.SOUND_BREWING_STAND_BREW, worldPosition, 0);
     }
 
     boolean isBrewable(){
+        FluidStack fluidStack = handler.fluidStack;
+        if (fluidStack.getFluid() == Fluids.WATER || fluidStack.getFluid() == Init.ModFluids.POTION) {
+            Potion potion;
+            if (fluidStack.getFluid() == Init.ModFluids.POTION) {
+                potion = PotionUtils.getPotion(fluidStack.getTag());
+            } else {
+                 potion= Potions.WATER;
+            }
 
+            ItemStack potionStack = PotionUtils.setPotion(Items.POTION.getDefaultInstance(),potion);
+            return BrewingRecipeRegistry.hasOutput(potionStack,handler.getStackInSlot(BrewingHandler.INGREDIENT));
+        } else {
+            return false;
+        }
     }
 
-    protected BrewingHandler itemStackHandler = new BrewingHandler(4) {
+    protected NonNullList<ItemStack> makeWrapper() {
+        NonNullList<ItemStack> stacks = NonNullList.withSize(5,ItemStack.EMPTY);
+        FluidStack fluidStack = handler.fluidStack;
+        ItemStack potionStack = ItemStack.EMPTY;
+        if (fluidStack.getFluid() == Fluids.WATER || fluidStack.getFluid() == Init.ModFluids.POTION) {
+            Potion potion;
+            if (fluidStack.getFluid() == Init.ModFluids.POTION) {
+                potion = PotionUtils.getPotion(fluidStack.getTag());
+            } else {
+                potion = Potions.WATER;
+            }
+            potionStack = PotionUtils.setPotion(Items.POTION.getDefaultInstance(),potion);
+        }
+
+        if (!potionStack.isEmpty()) {
+            int potionLevel = getBlockState().getValue(WaterBrewingCauldronBlock.LEVEL);
+            for (int i = 0; i < potionLevel;i++) {
+                stacks.set(i,potionStack);
+            }
+        }
+
+        stacks.set(3,handler.getIngredient());
+        stacks.set(4,handler.getFuel());
+
+        return stacks;
+    }
+
+    protected BrewingHandler handler = new BrewingHandler(4,this) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -209,6 +270,6 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     @org.jetbrains.annotations.Nullable
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
-        return new BrewingCauldronMenu(pContainerId,pPlayerInventory,itemStackHandler,dataAccess);
+        return new BrewingCauldronMenu(pContainerId,pPlayerInventory, handler,handler,dataAccess);
     }
 }
