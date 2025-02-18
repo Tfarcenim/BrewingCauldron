@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.client.FluidContainerColorer;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
@@ -22,6 +23,7 @@ public class ModClient {
     public static void init(IEventBus bus){
         bus.addListener(ModClient::setup);
         bus.addListener(ModClient::blockColors);
+        bus.addListener(ModClient::itemColors);
     }
 
        static BlockColor color =   (state, level, pos, i) -> {
@@ -33,6 +35,11 @@ public class ModClient {
         }
         return  0xffffffff;
     };
+
+
+    static void itemColors(ColorHandlerEvent.Item event) {
+        event.getItemColors().register(new FluidContainerColorer(), Init.ModItems.POTION_BUCKET);
+    }
 
 
     static void blockColors(ColorHandlerEvent.Block event) {

@@ -1,13 +1,14 @@
 package tfar.brewingcauldron.item;
 
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.item.BucketItem;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -37,5 +38,15 @@ public class PotionBucketItem extends BucketItem {
     @Override
     public ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
         return new PotionFluidBucketHandler(stack);
+    }
+
+    public void fillItemCategory(CreativeModeTab pGroup, NonNullList<ItemStack> pItems) {
+        if (this.allowdedIn(pGroup)) {
+            for(Potion potion : Registry.POTION) {
+                if (potion != Potions.EMPTY) {
+                    pItems.add(PotionUtils.setPotion(new ItemStack(this), potion));
+                }
+            }
+        }
     }
 }

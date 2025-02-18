@@ -5,6 +5,7 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
+import net.minecraftforge.client.model.generators.loaders.DynamicBucketModelBuilder;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.RegistryObject;
 import tfar.brewingcauldron.BrewingCauldron;
@@ -19,6 +20,12 @@ public class ModItemModelProvider extends ItemModelProvider {
     @Override
     protected void registerModels() {
         makeSimpleBlockItem(Init.ModItems.BREWING_CAULDRON,mcLoc("item/cauldron"));
+
+        withExistingParent(Init.ModItems.POTION_BUCKET.getRegistryName().getPath(), new ResourceLocation("forge","item/bucket"))
+                .customLoader(DynamicBucketModelBuilder::begin)
+                .fluid(Init.ModFluids.POTION)
+                .applyTint(false)
+                .end();
     }
 
     private void generatedItem(String path) {

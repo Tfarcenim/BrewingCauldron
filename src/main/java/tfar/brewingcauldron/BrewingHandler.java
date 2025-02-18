@@ -3,7 +3,6 @@ package tfar.brewingcauldron;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.BrewingStandMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
@@ -11,7 +10,6 @@ import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
-import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -20,6 +18,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
 
     private final BrewingCauldronBlockEntity be;
     protected FluidStack fluidStack = FluidStack.EMPTY;
+    public int bottles;
 
     public BrewingHandler(int slots,BrewingCauldronBlockEntity be) {
         super(slots);
@@ -39,8 +38,8 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     @Override
     public boolean isItemValid(int slot, @NotNull ItemStack stack) {
         return switch (slot) {
-            case 0 -> BrewingStandMenu.PotionSlot.mayPlaceItem(stack);//potion bottles
-            case 1 -> BrewingStandMenu.PotionSlot.mayPlaceItem(stack);
+            case 0 -> BrewingStandMenu.PotionSlot.mayPlaceItem(stack);//potion bottle input
+            case 1 -> false;
             case 2 -> BrewingRecipeRegistry.isValidIngredient(stack);
             case 3 -> BrewingStandMenu.FuelSlot.mayPlaceItem(stack);
             default -> super.isItemValid(slot, stack);
@@ -85,6 +84,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
         if (action.execute()) {
             fluidStack = resource.copy();
             fluidStack.setAmount(FluidAttributes.BUCKET_VOLUME);
+            bottles = 3;
             onContentsChanged(0);
         }
 
@@ -111,11 +111,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     }
 
     boolean isFull() {
-        BlockState state = be.getBlockState();
-        if (state.getBlock() instanceof WaterBrewingCauldronBlock) {
-            return state.getValue(WaterBrewingCauldronBlock.LEVEL) == 3;
-        }
-        return true;
+        return bottles >= 3;
     }
 
     @NotNull
@@ -140,6 +136,7 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     public CompoundTag serializeNBT() {
         CompoundTag compoundTag = super.serializeNBT();
         compoundTag.put("fluid",fluidStack.writeToNBT(new CompoundTag()));
+        compoundTag.putInt("bottles",bottles);
         return compoundTag;
     }
 
@@ -147,10 +144,12 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     public void deserializeNBT(CompoundTag nbt) {
         super.deserializeNBT(nbt);
         fluidStack = FluidStack.loadFluidStackFromNBT(nbt.getCompound("fluid"));
+        bottles = nbt.getInt("bottles");
     }
 
     @Override
     public void setFluidInSlot(int slot, @NotNull FluidStack stack) {
+        if (stack.isEmpty()) {bottles = 0;}
         fluidStack = stack;
         onContentsChanged(0);
     }

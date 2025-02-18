@@ -39,28 +39,33 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     int fuel;
     private Item ingredient;
 
+    boolean tryFillBottle;
+
     protected final ContainerData dataAccess = new ContainerData() {
         public int get(int p_59038_) {
             return switch (p_59038_) {
                 case 0 -> brewTime;
                 case 1 -> fuel;
+                case 2 -> handler.bottles;
                 default -> 0;
             };
         }
 
-        public void set(int p_59040_, int p_59041_) {
+        public void set(int p_59040_, int value) {
             switch(p_59040_) {
                 case 0:
-                    brewTime = p_59041_;
+                    brewTime = value;
                     break;
                 case 1:
-                    fuel = p_59041_;
+                    fuel = value;
+                case 2:
+                    handler.bottles = value;
             }
 
         }
 
         public int getCount() {
-            return 2;
+            return 3;
         }
     };
 
@@ -97,8 +102,51 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
             setChanged();
         }
 
+        if (tryFillBottle) {
+            tryBottles();
+            tryFillBottle = false;
+        }
+
            // level.setBlock(worldPosition, blockstate, 2);
 
+    }
+
+    protected void tryBottles() {
+        tryFill();
+    }
+
+    //bottle -> cauldron
+    protected void tryFill() {
+        ItemStack input = handler.getStackInSlot(BrewingHandler.BOTTLE_INPUT);
+        if (!input.isEmpty()) {
+            ItemStack output = handler.getStackInSlot(BrewingHandler.BOTTLE_OUTPUT);
+            if (output.isEmpty()) {
+                FluidStack fluidStack = handler.fluidStack;
+                //empty cauldron
+                if (fluidStack.isEmpty()) {
+
+                } else {
+                    //empty glass bottles
+                    if (input.is(Items.GLASS_BOTTLE)) {
+                        if (fluidStack.getFluid() == Fluids.WATER || fluidStack.getFluid() == Init.ModFluids.POTION) {
+                            ItemStack potionStack = Items.POTION.getDefaultInstance();
+                            if (fluidStack.hasTag()) {
+                                potionStack.setTag(fluidStack.getTag());
+                            }
+                            handler.setStackInSlot(BrewingHandler.BOTTLE_OUTPUT,potionStack);
+                            handler.extractItem(BrewingHandler.BOTTLE_INPUT,1,false);
+                            handler.bottles--;
+                            setChanged();
+                            if (handler.bottles <= 0) {
+                                handler.setFluidInSlot(0,FluidStack.EMPTY);
+                            }
+                        }
+                    }
+                }
+            } else {
+
+            }
+        }
     }
 
     private static final int[] SLOTS_FOR_SIDES = new int[]{0, 1, 2, 4};
@@ -184,8 +232,8 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
             level.setBlock(worldPosition,Init.ModBlocks.BREWING_CAULDRON.defaultBlockState(),Block.UPDATE_ALL);
         }
 
-        if ((stack.getFluid() == Fluids.WATER || stack.getFluid() == Init.ModFluids.POTION) && getBlockState().getBlock() != Init.ModBlocks.WATER_BREWING_CAULDRON) {
-            level.setBlock(worldPosition,Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(WaterBrewingCauldronBlock.LEVEL,3),Block.UPDATE_ALL);
+        if ((stack.getFluid() == Fluids.WATER || stack.getFluid() == Init.ModFluids.POTION)) {
+            level.setBlock(worldPosition,Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(WaterBrewingCauldronBlock.LEVEL,handler.bottles),Block.UPDATE_ALL);
         }
 
         if (stack.getFluid() == Fluids.LAVA && getBlockState().getBlock() != Init.ModBlocks.LAVA_BREWING_CAULDRON) {
@@ -197,6 +245,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
+            tryFillBottle = true;
             setChanged();
         }
     };

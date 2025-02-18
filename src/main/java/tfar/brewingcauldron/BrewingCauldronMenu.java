@@ -30,7 +30,7 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
     private final ContainerData data;
 
     public BrewingCauldronMenu(int containerId, Inventory inventory) {
-        this(containerId,inventory,new BrewingHandler(4,null),new SimpleFluidHandler(1),new SimpleContainerData(2));
+        this(containerId,inventory,new BrewingHandler(4,null),new SimpleFluidHandler(1),new SimpleContainerData(3));
     }
 
     public BrewingCauldronMenu(int containerId, Inventory inventory, ItemStackHandler handler,IFluidHandlerModifiable fluidHandler, ContainerData data) {
@@ -126,7 +126,7 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack itemstack1 = slot.getItem();
             itemstack = itemstack1.copy();
-            if ((pIndex < 0 || pIndex > 1) && pIndex != 3 && pIndex != 4) {
+            if ((pIndex < 0 || pIndex > 1) && pIndex != 2 && pIndex != 3) {
                 if (BrewingStandMenu.FuelSlot.mayPlaceItem(itemstack)) {
                     if (this.moveItemStackTo(itemstack1, 3, 4, false) || this.ingredientSlot.mayPlace(itemstack1) && !this.moveItemStackTo(itemstack1, 3, 4, false)) {
                         return ItemStack.EMPTY;
@@ -189,6 +189,10 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
 
     public int getFuel() {
         return this.data.get(1);
+    }
+
+    public int getBottles() {
+        return data.get(2);
     }
 
     public int getBrewingTicks() {

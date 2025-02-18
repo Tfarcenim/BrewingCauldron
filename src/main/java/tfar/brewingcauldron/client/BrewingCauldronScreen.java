@@ -12,8 +12,10 @@ import net.minecraftforge.fluids.FluidStack;
 import tfar.brewingcauldron.BrewingCauldron;
 import tfar.brewingcauldron.BrewingCauldronMenu;
 import tfar.brewingcauldron.FluidSlot;
+import tfar.brewingcauldron.PotionUtils2;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +36,12 @@ public class BrewingCauldronScreen extends AbstractContainerScreen<BrewingCauldr
     protected void init() {
         super.init();
         this.titleLabelX = (this.imageWidth - this.font.width(this.title)) / 2;
+    }
+
+    @Override
+    protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
+        super.renderLabels(pPoseStack, pMouseX, pMouseY);
+        font.drawShadow(pPoseStack,menu.getBottles()+"",95,65,0xffffffff);
     }
 
     @Override
@@ -69,7 +77,12 @@ public class BrewingCauldronScreen extends AbstractContainerScreen<BrewingCauldr
     protected void renderTooltip(PoseStack pPoseStack, int pX, int pY) {
         super.renderTooltip(pPoseStack, pX, pY);
         if(this.menu.getCarried().isEmpty() && this.hoveredFluidSlot != null && this.hoveredFluidSlot.hasFluid()) {
-            renderTooltip(pPoseStack, List.of(hoveredFluidSlot.getFluid().getDisplayName()), Optional.empty(),pX,pY,font);
+            List<Component> tooltip = new ArrayList<>();
+            tooltip.add(hoveredFluidSlot.getFluid().getDisplayName());
+
+            PotionUtils2.addPotionTooltip(hoveredFluidSlot.getFluid().getTag(), tooltip, 1.0F);
+
+            renderTooltip(pPoseStack, tooltip, Optional.empty(),pX,pY,font);
         }
     }
 

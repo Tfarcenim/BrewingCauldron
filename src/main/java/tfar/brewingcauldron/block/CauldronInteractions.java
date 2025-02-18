@@ -21,11 +21,15 @@ import net.minecraft.world.level.block.entity.BannerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidActionResult;
+import net.minecraftforge.fluids.FluidAttributes;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import tfar.brewingcauldron.BrewingCauldronBlockEntity;
 import tfar.brewingcauldron.Init;
+import tfar.brewingcauldron.PotionUtils2;
 
 import java.util.Map;
 import java.util.function.Predicate;
@@ -138,51 +142,87 @@ public class CauldronInteractions {
         EMPTY_BREWING.put(Init.ModItems.POTION_BUCKET,(pBlockState, pLevel, pBlockPos, pPlayer, pHand, pStack) -> {
             return emptyBucket(pLevel, pBlockPos, pPlayer, pHand,pStack, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), SoundEvents.BUCKET_EMPTY);
         });
-        EMPTY_BREWING.put(Items.POTION, (p_175732_, level, p_175734_, player, p_175736_, p_175737_) -> {
-            if (PotionUtils.getPotion(p_175737_) != Potions.WATER) {
-                return InteractionResult.PASS;
-            } else {
-                if (!level.isClientSide) {
-                    Item item = p_175737_.getItem();
-                    player.setItemInHand(p_175736_, ItemUtils.createFilledResult(p_175737_, player, new ItemStack(Items.GLASS_BOTTLE)));
+        EMPTY_BREWING.put(Items.POTION, (p_175732_, level, pos, player, hand, stack) -> {
+            if (!level.isClientSide) {
+
+
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof BrewingCauldronBlockEntity brewingBE) {
+                    Item item = stack.getItem();
                     player.awardStat(Stats.USE_CAULDRON);
                     player.awardStat(Stats.ITEM_USED.get(item));
-                    level.setBlockAndUpdate(p_175734_, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState());
-                    level.playSound(null, p_175734_, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
-                    level.gameEvent(null, GameEvent.FLUID_PLACE, p_175734_);
+                    brewingBE.handler.bottles++;
+                    brewingBE.handler.setFluidInSlot(0,new FluidStack(Init.ModFluids.POTION, FluidAttributes.BUCKET_VOLUME,stack.getTag()));
+                    player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.GLASS_BOTTLE)));
+                    level.playSound(null, pos, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.gameEvent(null, GameEvent.FLUID_PLACE, pos);
                 }
-                return InteractionResult.sidedSuccess(level.isClientSide);
+
+                //level.setBlockAndUpdate(pos, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState());
+
             }
+            return InteractionResult.sidedSuccess(level.isClientSide);
         });
         addDefaultInteractions(WATER_BREWING);
         WATER_BREWING.put(Items.BUCKET, (p_175725_, p_175726_, p_175727_, p_175728_, p_175729_, p_175730_)
                 -> fillBucket(p_175725_, p_175726_, p_175727_, p_175728_, p_175729_, p_175730_, new ItemStack(Items.WATER_BUCKET),
                 p_175660_ -> p_175660_.getValue(LayeredCauldronBlock.LEVEL) == 3, SoundEvents.BUCKET_FILL));
-        WATER_BREWING.put(Items.GLASS_BOTTLE, (p_175718_, p_175719_, p_175720_, p_175721_, p_175722_, p_175723_) -> {
-            if (!p_175719_.isClientSide) {
-                Item item = p_175723_.getItem();
-                p_175721_.setItemInHand(p_175722_, ItemUtils.createFilledResult(p_175723_, p_175721_, PotionUtils.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
-                p_175721_.awardStat(Stats.USE_CAULDRON);
-                p_175721_.awardStat(Stats.ITEM_USED.get(item));
-                LayeredCauldronBlock.lowerFillLevel(p_175718_, p_175719_, p_175720_);
-                p_175719_.playSound(null, p_175720_, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
-                p_175719_.gameEvent(null, GameEvent.FLUID_PICKUP, p_175720_);
+        WATER_BREWING.put(Items.GLASS_BOTTLE, (p_175718_, level, pos, player, hand, stack) -> {
+            if (!level.isClientSide) {
+
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof BrewingCauldronBlockEntity brewingBE) {
+                    FluidStack fluidStack = brewingBE.handler.getFluidInTank(0);
+                    if (fluidStack.getFluid() == Fluids.WATER || fluidStack.getFluid() == Init.ModFluids.POTION) {
+                        Item item = stack.getItem();
+                        ItemStack potionStack = Items.POTION.getDefaultInstance();
+                        if (fluidStack.getFluid() == Fluids.WATER) {
+                            PotionUtils.setPotion(potionStack, Potions.WATER);
+                        } else  {
+                            potionStack.setTag(fluidStack.getTag());
+                        }
+
+                        player.setItemInHand(hand,potionStack);
+                        brewingBE.handler.bottles--;
+                        if (brewingBE.handler.bottles<=0) {
+                            brewingBE.handler.setFluidInSlot(0,FluidStack.EMPTY);
+                        } else {
+                            brewingBE.setChanged();
+                        }
+                            //player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, PotionUtils.setPotion(new ItemStack(Items.POTION), Potions.WATER)));
+                            player.awardStat(Stats.USE_CAULDRON);
+                        player.awardStat(Stats.ITEM_USED.get(item));
+
+
+                        level.playSound(null, pos, SoundEvents.BOTTLE_FILL, SoundSource.BLOCKS, 1.0F, 1.0F);
+                        level.gameEvent(null, GameEvent.FLUID_PICKUP, pos);
+                    }
+                }
             }
 
-            return InteractionResult.sidedSuccess(p_175719_.isClientSide);
+            return InteractionResult.sidedSuccess(level.isClientSide);
         });
-        WATER_BREWING.put(Items.POTION, (p_175704_, p_175705_, p_175706_, p_175707_, p_175708_, p_175709_) -> {
-            if (p_175704_.getValue(LayeredCauldronBlock.LEVEL) != 3 && PotionUtils.getPotion(p_175709_) == Potions.WATER) {
-                if (!p_175705_.isClientSide) {
-                    p_175707_.setItemInHand(p_175708_, ItemUtils.createFilledResult(p_175709_, p_175707_, new ItemStack(Items.GLASS_BOTTLE)));
-                    p_175707_.awardStat(Stats.USE_CAULDRON);
-                    p_175707_.awardStat(Stats.ITEM_USED.get(p_175709_.getItem()));
-                    p_175705_.setBlockAndUpdate(p_175706_, p_175704_.cycle(LayeredCauldronBlock.LEVEL));
-                    p_175705_.playSound(null, p_175706_, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
-                    p_175705_.gameEvent(null, GameEvent.FLUID_PLACE, p_175706_);
+        WATER_BREWING.put(Items.POTION, (state, level, pos, player, hand, stack) -> {
+            if (state.getValue(LayeredCauldronBlock.LEVEL) != 3) {
+                if (!level.isClientSide) {
+                    BlockEntity be = level.getBlockEntity(pos);
+                    if (be instanceof BrewingCauldronBlockEntity brewingBE) {
+                        if (PotionUtils2.haveSameEffects(stack, brewingBE.handler.getFluidInTank(0))) {
+                            player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.GLASS_BOTTLE)));
+                            player.awardStat(Stats.USE_CAULDRON);
+                            player.awardStat(Stats.ITEM_USED.get(stack.getItem()));
+
+                            brewingBE.handler.bottles++;
+                            brewingBE.setChanged();
+
+                            level.playSound(null, pos, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+                            level.gameEvent(null, GameEvent.FLUID_PLACE, pos);
+                        }
+                    }
                 }
 
-                return InteractionResult.sidedSuccess(p_175705_.isClientSide);
+                return InteractionResult.sidedSuccess(level.isClientSide);
+               // return InteractionResult.PASS;
             } else {
                 return InteractionResult.PASS;
             }
@@ -251,7 +291,6 @@ public class CauldronInteractions {
 
                 BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
                 if (blockEntity instanceof BrewingCauldronBlockEntity brewingCauldronBlockEntity) {
-                    //brewingCauldronBlockEntity.
                     FluidActionResult fluidActionResult = FluidUtil.tryFillContainerAndStow(pEmptyStack, brewingCauldronBlockEntity.handler, new InvWrapper(pPlayer.getInventory()), 1000, pPlayer, true);
                     if (fluidActionResult.isSuccess()) {
                         pPlayer.setItemInHand(pHand,fluidActionResult.getResult());
