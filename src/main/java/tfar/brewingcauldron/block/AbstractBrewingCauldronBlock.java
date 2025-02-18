@@ -45,6 +45,13 @@ public abstract class AbstractBrewingCauldronBlock extends AbstractCauldronBlock
         return use;
     }
 
+    @Override
+    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
+        if (pState.hasBlockEntity() && (!(pNewState.getBlock() instanceof AbstractBrewingCauldronBlock)) || !pNewState.hasBlockEntity()) {
+            pLevel.removeBlockEntity(pPos);
+        }
+    }
+
     @Nullable
     @Override
     public MenuProvider getMenuProvider(BlockState pState, Level pLevel, BlockPos pPos) {

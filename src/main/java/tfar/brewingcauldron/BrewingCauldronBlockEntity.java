@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
+import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
@@ -112,22 +113,30 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     private void doBrew() {
         NonNullList<ItemStack> wrapper = makeWrapper();
         if (net.minecraftforge.event.ForgeEventFactory.onPotionAttemptBrew(wrapper)) return;
-        ItemStack itemstack = wrapper.get(3);
+        ItemStack ingredient = wrapper.get(3);
 
-        net.minecraftforge.common.brewing.BrewingRecipeRegistry.brewPotions(wrapper, itemstack, SLOTS_FOR_SIDES);
+        net.minecraftforge.common.brewing.BrewingRecipeRegistry.brewPotions(wrapper, ingredient, SLOTS_FOR_SIDES);
         net.minecraftforge.event.ForgeEventFactory.onPotionBrewed(wrapper);
-        if (itemstack.hasContainerItem()) {
-            ItemStack itemstack1 = itemstack.getContainerItem();
-            itemstack.shrink(1);
-            if (itemstack.isEmpty()) {
-                itemstack = itemstack1;
+        if (ingredient.hasContainerItem()) {
+            ItemStack itemstack1 = ingredient.getContainerItem();
+            ingredient.shrink(1);
+            if (ingredient.isEmpty()) {
+                ingredient = itemstack1;
             } else {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(), itemstack1);
             }
         }
-        else itemstack.shrink(1);
+        else ingredient.shrink(1);
+        wrapper.set(3, ingredient);
 
-        wrapper.set(3, itemstack);
+        ItemStack stack = wrapper.get(0);
+        FluidStack fluidStack = new FluidStack(Init.ModFluids.POTION, FluidAttributes.BUCKET_VOLUME);
+        fluidStack.setTag(stack.getTag());
+
+        handler.setFluidInSlot(0,fluidStack);
+
+        handler.setStackInSlot(2,ingredient);
+
         level.levelEvent(LevelEvent.SOUND_BREWING_STAND_BREW, worldPosition, 0);
     }
 
@@ -175,7 +184,22 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         return stacks;
     }
 
-    protected BrewingHandler handler = new BrewingHandler(4,this) {
+    public void updateAppearance() {
+        FluidStack stack = handler.fluidStack;
+        if (stack.isEmpty() && getBlockState().getBlock() != Init.ModBlocks.BREWING_CAULDRON) {
+            level.setBlock(worldPosition,Init.ModBlocks.BREWING_CAULDRON.defaultBlockState(),Block.UPDATE_ALL);
+        }
+
+        if ((stack.getFluid() == Fluids.WATER || stack.getFluid() == Init.ModFluids.POTION) && getBlockState().getBlock() != Init.ModBlocks.WATER_BREWING_CAULDRON) {
+            level.setBlock(worldPosition,Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(WaterBrewingCauldronBlock.LEVEL,3),Block.UPDATE_ALL);
+        }
+
+        if (stack.getFluid() == Fluids.LAVA && getBlockState().getBlock() != Init.ModBlocks.LAVA_BREWING_CAULDRON) {
+            level.setBlock(worldPosition,Init.ModBlocks.LAVA_BREWING_CAULDRON.defaultBlockState(),Block.UPDATE_ALL);
+        }
+    }
+
+    public BrewingHandler handler = new BrewingHandler(4,this) {
         @Override
         protected void onContentsChanged(int slot) {
             super.onContentsChanged(slot);
@@ -232,6 +256,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public void setChanged() {
         super.setChanged();
+        updateAppearance();
         level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(), Block.UPDATE_ALL);
     }
 
@@ -253,12 +278,18 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         if (nbt.contains(PotionUtils.TAG_CUSTOM_POTION_COLOR)) {
             customPotionColor = nbt.getInt(PotionUtils.TAG_CUSTOM_POTION_COLOR);
         }
+
+        handler.deserializeNBT(nbt.getCompound("handler"));
+
         super.load(nbt);
+        if (hasLevel())
+            level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);
     }
 
     @Override
     public void saveAdditional(CompoundTag compound) {
         PotionUtils2.saveAllEffects(compound, potion, customEffects,customPotionColor);
+        compound.put("handler",handler.serializeNBT());
         super.saveAdditional(compound);
     }
 

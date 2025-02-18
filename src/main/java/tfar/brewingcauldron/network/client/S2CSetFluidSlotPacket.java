@@ -41,6 +41,5 @@ public class S2CSetFluidSlotPacket implements S2CModPacket{
         buffer.writeVarInt(this.stateId);
         buffer.writeShort(this.slot);
         stack.writeToPacket(buffer);
-        ghost.writeToPacket(buffer);
     }
 }

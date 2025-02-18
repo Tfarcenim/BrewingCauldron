@@ -42,11 +42,11 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
         this.fluidHandler = fluidHandler;
         this.data = data;
 
-        this.addSlot(new SlotItemHandler(handler, 0, 56, 51));
-        this.addSlot(new SlotItemHandler(handler, 1, 79, 58));
-        this.addSlot(new SlotItemHandler(handler, 2, 102, 51));
-        this.ingredientSlot = this.addSlot(new SlotItemHandler(handler, 3, 79, 17));
-        this.addSlot(new SlotItemHandler(handler, 4, 17, 17));
+        this.addSlot(new SlotItemHandler(handler, 0, 56-12, 51));
+       // this.addSlot(new SlotItemHandler(handler, 1, 79, 58));
+        this.addSlot(new SlotItemHandler(handler, 1, 102+12+2, 51));
+        this.ingredientSlot = this.addSlot(new SlotItemHandler(handler, 2, 79, 17));
+        this.addSlot(new SlotItemHandler(handler, 3, 17, 17));
 
 
         for(int i = 0; i < 3; ++i) {
@@ -61,7 +61,7 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
 
         addDataSlots(data);
 
-        addFluidSlot(new FluidSlot(fluidHandler,0,0,0));
+        addFluidSlot(new FluidSlot(fluidHandler,0,79,51));
 
     }
 
@@ -86,19 +86,12 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
     }
 
     private void synchronizeFluidSlotToRemote(int slot, FluidStack stack, Supplier<FluidStack> supplier) {
-        // if (!this.suppressRemoteUpdates) {
         FluidStack remoteFluid = this.remoteFluidSlots.get(slot);
         if (!Objects.equals(remoteFluid,stack)) {
             FluidStack copy = supplier.get();
             this.remoteFluidSlots.set(slot, copy);
-            PacketHandlerForge.sendToClient(new S2CSetFluidSlotPacket(incrementStateId(),containerId,slot,stack), (ServerPlayer) player);
-
-            //      if (this.synchronizer != null) {
-            //          this.synchronizer.sendSlotChange(this, slot, copy);
-            //       }
-
+            PacketHandlerForge.sendToClient(new S2CSetFluidSlotPacket(incrementStateId(), containerId, slot, stack), (ServerPlayer) player);
         }
-        //   }
     }
 
     @Override
@@ -111,7 +104,7 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
         }
 
 
-        PacketHandlerForge.sendToClient(new S2CInitialSyncFluidInventoryPacket(incrementStateId(), containerId, fluidHandler.), (ServerPlayer) player);
+        PacketHandlerForge.sendToClient(new S2CInitialSyncFluidInventoryPacket(incrementStateId(), containerId, fluidHandler.getFluids()), (ServerPlayer) player);
     }
 
     public FluidSlot getFluidSlot(int slot) {
@@ -135,5 +128,13 @@ public class BrewingCauldronMenu extends AbstractContainerMenu {
     public void setFluid(int slot, int stateId, FluidStack stack) {
         this.getFluidSlot(slot).setFluid(stack);
         this.stateId = stateId;
+    }
+
+    public int getFuel() {
+        return this.data.get(1);
+    }
+
+    public int getBrewingTicks() {
+        return this.data.get(0);
     }
 }

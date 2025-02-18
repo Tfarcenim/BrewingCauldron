@@ -22,7 +22,7 @@ public class Init {
 
     public static class ModBlockEntityTypes {
         public static final BlockEntityType<BrewingCauldronBlockEntity> BREWING_CAULDRON = BlockEntityType.Builder
-                .of(BrewingCauldronBlockEntity::new,ModBlocks.BREWING_CAULDRON).build(null);
+                .of(BrewingCauldronBlockEntity::new,ModBlocks.BREWING_CAULDRON,ModBlocks.LAVA_BREWING_CAULDRON,ModBlocks.WATER_BREWING_CAULDRON,ModBlocks.POWDER_SNOW_BREWING_CAULDRON).build(null);
     }
 
     public static class ModBlocks {

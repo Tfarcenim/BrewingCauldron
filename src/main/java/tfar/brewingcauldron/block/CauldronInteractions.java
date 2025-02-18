@@ -18,8 +18,13 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.entity.BannerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraftforge.fluids.FluidActionResult;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.items.wrapper.InvWrapper;
+import tfar.brewingcauldron.BrewingCauldronBlockEntity;
 import tfar.brewingcauldron.Init;
 
 import java.util.Map;
@@ -33,13 +38,13 @@ public class CauldronInteractions {
     public static final Map<Item, CauldronInteraction> POWDER_SNOW_BREWING = CauldronInteraction.newInteractionMap();
 
     static CauldronInteraction FILL_WATER = (p_175683_, p_175684_, p_175685_, p_175686_, p_175687_, p_175688_) -> {
-        return CauldronInteraction.emptyBucket(p_175684_, p_175685_, p_175686_, p_175687_, p_175688_, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, Integer.valueOf(3)), SoundEvents.BUCKET_EMPTY);
+        return emptyBucket(p_175684_, p_175685_, p_175686_, p_175687_, p_175688_, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), SoundEvents.BUCKET_EMPTY);
     };
     static CauldronInteraction FILL_LAVA = (p_175676_, p_175677_, p_175678_, p_175679_, p_175680_, p_175681_) -> {
-        return CauldronInteraction.emptyBucket(p_175677_, p_175678_, p_175679_, p_175680_, p_175681_, Init.ModBlocks.LAVA_BREWING_CAULDRON.defaultBlockState(), SoundEvents.BUCKET_EMPTY_LAVA);
+        return emptyBucket(p_175677_, p_175678_, p_175679_, p_175680_, p_175681_, Init.ModBlocks.LAVA_BREWING_CAULDRON.defaultBlockState(), SoundEvents.BUCKET_EMPTY_LAVA);
     };
     static CauldronInteraction FILL_POWDER_SNOW = (p_175669_, p_175670_, p_175671_, p_175672_, p_175673_, p_175674_) -> {
-        return CauldronInteraction.emptyBucket(p_175670_, p_175671_, p_175672_, p_175673_, p_175674_, Blocks.POWDER_SNOW_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, Integer.valueOf(3)), SoundEvents.BUCKET_EMPTY_POWDER_SNOW);
+        return emptyBucket(p_175670_, p_175671_, p_175672_, p_175673_, p_175674_, Blocks.POWDER_SNOW_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), SoundEvents.BUCKET_EMPTY_POWDER_SNOW);
     };
 
     static CauldronInteraction SHULKER_BOX = (p_175662_, p_175663_, p_175664_, p_175665_, p_175666_, stack) -> {
@@ -107,9 +112,35 @@ public class CauldronInteractions {
         }
     };
 
+    static InteractionResult emptyBucket(Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, ItemStack pFilledStack, BlockState pState, SoundEvent pEmptySound) {
+        if (!pLevel.isClientSide) {
+            Item item = pFilledStack.getItem();
+           // pPlayer.setItemInHand(pHand, ItemUtils.createFilledResult(pFilledStack, pPlayer, new ItemStack(Items.BUCKET)));
+            pPlayer.awardStat(Stats.FILL_CAULDRON);
+            pPlayer.awardStat(Stats.ITEM_USED.get(item));
+            //pLevel.setBlockAndUpdate(pPos, pState);
+
+            BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+            if (blockEntity instanceof BrewingCauldronBlockEntity brewingCauldronBlockEntity) {
+                //brewingCauldronBlockEntity.
+                FluidActionResult fluidActionResult = FluidUtil.tryEmptyContainerAndStow(pFilledStack, brewingCauldronBlockEntity.handler, new InvWrapper(pPlayer.getInventory()), 1000, pPlayer, false);
+                if (fluidActionResult.isSuccess()) {
+                    pPlayer.setItemInHand(pHand,fluidActionResult.getResult());
+                }
+            }
+
+            pLevel.playSound(null, pPos, pEmptySound, SoundSource.BLOCKS, 1.0F, 1.0F);
+            pLevel.gameEvent(null, GameEvent.FLUID_PLACE, pPos);
+        }
+
+        return InteractionResult.sidedSuccess(pLevel.isClientSide);
+    }
 
     public static void bootStrap() {
         addDefaultInteractions(EMPTY_BREWING);
+        EMPTY_BREWING.put(Init.ModItems.POTION_BUCKET,(pBlockState, pLevel, pBlockPos, pPlayer, pHand, pStack) -> {
+            return emptyBucket(pLevel, pBlockPos, pPlayer, pHand,pStack, Init.ModBlocks.WATER_BREWING_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3), SoundEvents.BUCKET_EMPTY);
+        });
         EMPTY_BREWING.put(Items.POTION, (p_175732_, level, p_175734_, player, p_175736_, p_175737_) -> {
             if (PotionUtils.getPotion(p_175737_) != Potions.WATER) {
                 return InteractionResult.PASS;
@@ -128,7 +159,7 @@ public class CauldronInteractions {
         });
         addDefaultInteractions(WATER_BREWING);
         WATER_BREWING.put(Items.BUCKET, (p_175725_, p_175726_, p_175727_, p_175728_, p_175729_, p_175730_)
-                -> CauldronInteraction.fillBucket(p_175725_, p_175726_, p_175727_, p_175728_, p_175729_, p_175730_, new ItemStack(Items.WATER_BUCKET),
+                -> fillBucket(p_175725_, p_175726_, p_175727_, p_175728_, p_175729_, p_175730_, new ItemStack(Items.WATER_BUCKET),
                 p_175660_ -> p_175660_.getValue(LayeredCauldronBlock.LEVEL) == 3, SoundEvents.BUCKET_FILL));
         WATER_BREWING.put(Items.GLASS_BOTTLE, (p_175718_, p_175719_, p_175720_, p_175721_, p_175722_, p_175723_) -> {
             if (!p_175719_.isClientSide) {
@@ -217,12 +248,18 @@ public class CauldronInteractions {
         } else {
             if (!pLevel.isClientSide) {
                 Item item = pEmptyStack.getItem();
-                pPlayer.setItemInHand(pHand, ItemUtils.createFilledResult(pEmptyStack, pPlayer, pFilledStack));
+              //  pPlayer.setItemInHand(pHand, ItemUtils.createFilledResult(pEmptyStack, pPlayer, pFilledStack));
                 pPlayer.awardStat(Stats.USE_CAULDRON);
                 pPlayer.awardStat(Stats.ITEM_USED.get(item));
-                pLevel.setBlockAndUpdate(pPos, Blocks.CAULDRON.defaultBlockState());
-                pLevel.playSound(null, pPos, pFillSound, SoundSource.BLOCKS, 1.0F, 1.0F);
-                pLevel.gameEvent(null, GameEvent.FLUID_PICKUP, pPos);
+
+                BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+                if (blockEntity instanceof BrewingCauldronBlockEntity brewingCauldronBlockEntity) {
+                    //brewingCauldronBlockEntity.
+                    FluidActionResult fluidActionResult = FluidUtil.tryFillContainerAndStow(pEmptyStack, brewingCauldronBlockEntity.handler, new InvWrapper(pPlayer.getInventory()), 1000, pPlayer, true);
+                    if (fluidActionResult.isSuccess()) {
+                        pPlayer.setItemInHand(pHand,fluidActionResult.getResult());
+                    }
+                }
             }
 
             return InteractionResult.sidedSuccess(pLevel.isClientSide);

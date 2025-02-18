@@ -6,6 +6,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -35,6 +36,7 @@ public class BrewingCauldron {
         bus.addGenericListener(BlockEntityType.class,this::registerBlockEntities);
         bus.addGenericListener(Item.class,this::registerItems);
         bus.addGenericListener(MenuType.class,this::registerMenuTypes);
+        bus.addGenericListener(Fluid.class,this::registerFluids);
 
         bus.addListener(ModDataGenerator::gatherData);
         if (FMLEnvironment.dist.isClient()){
@@ -42,6 +44,8 @@ public class BrewingCauldron {
         }
         MinecraftForge.EVENT_BUS.addListener(this::rightClick);
     }
+
+
 
     public static ResourceLocation id(String s) {
         return new ResourceLocation(MOD_ID,s);
@@ -66,9 +70,16 @@ public class BrewingCauldron {
         event.getRegistry().registerAll(Init.ModMenuTypes.BREWING_CAULDRON.setRegistryName("brewing_cauldron"));
     }
 
+    private void registerFluids(RegistryEvent.Register<Fluid> event) {
+        event.getRegistry().registerAll(
+                Init.ModFluids.POTION.setRegistryName("potion")
+        );
+    }
+
     void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().registerAll(
-                Init.ModItems.BREWING_CAULDRON.setRegistryName("brewing_cauldron")
+                Init.ModItems.BREWING_CAULDRON.setRegistryName("brewing_cauldron"),
+                Init.ModItems.POTION_BUCKET.setRegistryName("potion_bucket")
         );
     }
 

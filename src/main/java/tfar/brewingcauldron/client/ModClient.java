@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.color.block.BlockColor;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.GameRenderer;
@@ -17,7 +16,6 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import tfar.brewingcauldron.BrewingCauldronBlockEntity;
-import tfar.brewingcauldron.BrewingCauldronScreen;
 import tfar.brewingcauldron.Init;
 
 public class ModClient {
@@ -47,7 +45,7 @@ public class ModClient {
 
 
 
-    public static void renderFluidInGui(Gui gui, PoseStack poseStack, int x, int y, FluidStack stack, String text) {
+    public static void renderFluidInGui(PoseStack poseStack, int x, int y, FluidStack stack, String text) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
         int color = stack.getFluid().getAttributes().getColor(stack);

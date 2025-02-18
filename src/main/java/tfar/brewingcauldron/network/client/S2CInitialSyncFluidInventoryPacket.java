@@ -1,6 +1,5 @@
 package tfar.brewingcauldron.network.client;
 
-import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.extensions.IForgeFriendlyByteBuf;
@@ -17,7 +16,7 @@ public class S2CInitialSyncFluidInventoryPacket implements S2CModPacket {
     private final int containerID;
     private final List<FluidStack> stacks;
 
-    public S2CInitialSyncFluidInventoryPacket(int stateID, int containerID, NonNullList<FluidStack> stacks) {
+    public S2CInitialSyncFluidInventoryPacket(int stateID, int containerID, List<FluidStack> stacks) {
         this.stateID = stateID;
         this.containerID = containerID;
         this.stacks = stacks;
@@ -26,7 +25,7 @@ public class S2CInitialSyncFluidInventoryPacket implements S2CModPacket {
     public S2CInitialSyncFluidInventoryPacket(FriendlyByteBuf buf) {
         stateID = buf.readInt();
         containerID = buf.readInt();
-        stacks = buf.readList(FluidStack::readFromPacket);
+        stacks = buf.readList(IForgeFriendlyByteBuf::readFluidStack);
     }
 
     @Override
