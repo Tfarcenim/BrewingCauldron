@@ -6,7 +6,9 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.BrewingStandMenu;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.AbstractCauldronBlock;
 import net.minecraft.world.level.block.EntityBlock;
@@ -15,8 +17,10 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import org.jetbrains.annotations.Nullable;
 import tfar.brewingcauldron.BrewingCauldronBlockEntity;
+import tfar.brewingcauldron.BrewingCauldronConfig;
 
 import java.util.Map;
 
@@ -36,10 +40,40 @@ public abstract class AbstractBrewingCauldronBlock extends AbstractCauldronBlock
         InteractionResult use = super.use(pState, pLevel, pPos, pPlayer, pHand, pHit);
 
         if (use == InteractionResult.PASS) {
-            if (!pLevel.isClientSide) {
-                pPlayer.openMenu(getMenuProvider(pState, pLevel, pPos));
+            BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+            if (blockEntity instanceof BrewingCauldronBlockEntity BCBE) {
+                ItemStack itemstack = pPlayer.getItemInHand(pHand);
+                if (BrewingStandMenu.FuelSlot.mayPlaceItem(itemstack) && BCBE.handler.getFuel().isEmpty()) {
+                    if (!pLevel.isClientSide) {
+                        BCBE.handler.setFuel(itemstack);
+                        pPlayer.setItemInHand(pHand, ItemStack.EMPTY);
+                    }
+                    return InteractionResult.sidedSuccess(pLevel.isClientSide);
+                }
+
+                if (BrewingRecipeRegistry.isValidIngredient(itemstack) && BCBE.handler.getIngredient().isEmpty()) {
+                    if (!pLevel.isClientSide) {
+                        BCBE.handler.setIngredient(itemstack);
+                        pPlayer.setItemInHand(pHand, ItemStack.EMPTY);
+                    }
+                    return InteractionResult.sidedSuccess(pLevel.isClientSide);
+                }
+
+                if (itemstack.isEmpty()&& !BCBE.handler.getIngredient().isEmpty() && pPlayer.isCrouching()) {
+                    if (!pLevel.isClientSide) {
+                        pPlayer.setItemInHand(pHand, BCBE.handler.getIngredient());
+                        BCBE.handler.setIngredient(ItemStack.EMPTY);
+                    }
+                    return InteractionResult.sidedSuccess(pLevel.isClientSide);
+                }
             }
-            return InteractionResult.sidedSuccess(pLevel.isClientSide);
+
+            if (BrewingCauldronConfig.INSTANCE.HAS_GUI.get()) {
+                if (!pLevel.isClientSide) {
+                    pPlayer.openMenu(getMenuProvider(pState, pLevel, pPos));
+                }
+                return InteractionResult.sidedSuccess(pLevel.isClientSide);
+            }
         }
 
         return use;

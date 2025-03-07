@@ -50,8 +50,16 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
         return getStackInSlot(INGREDIENT);
     }
 
+    public void setIngredient(ItemStack stack) {
+        setStackInSlot(INGREDIENT, stack);
+    }
+
     public ItemStack getFuel() {
         return getStackInSlot(FUEL);
+    }
+
+    public void setFuel(ItemStack stack) {
+        setStackInSlot(FUEL, stack);
     }
 
     @Override
