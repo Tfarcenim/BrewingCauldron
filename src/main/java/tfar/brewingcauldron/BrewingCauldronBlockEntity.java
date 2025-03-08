@@ -32,11 +32,15 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import tfar.brewingcauldron.block.WaterBrewingCauldronBlock;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvider {
 
@@ -330,9 +334,112 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         return new BrewingCauldronMenu(pContainerId,pPlayerInventory, handler,handler,dataAccess);
     }
 
+    AutomationWrapper wrapper = new AutomationWrapper();
+    LazyOptional<AutomationWrapper> optional = LazyOptional.of(() -> wrapper);
+
+
+    class AutomationWrapper implements IFluidHandlerModifiable, IItemHandlerModifiable {
+
+
+
+        @Override
+        public void setFluidInSlot(int slot, @NotNull FluidStack stack) {
+            handler.setFluidInSlot(slot, stack);
+        }
+
+        @Override
+        public List<FluidStack> getFluids() {
+            return handler.getFluids();
+        }
+
+        @Override
+        public int getTanks() {
+            return handler.getTanks();
+        }
+
+        @NotNull
+        @Override
+        public FluidStack getFluidInTank(int tank) {
+            return handler.getFluidInTank(tank);
+        }
+
+        @Override
+        public int getTankCapacity(int tank) {
+            return handler.getTankCapacity(tank);
+        }
+
+        @Override
+        public boolean isFluidValid(int tank, @NotNull FluidStack stack) {
+            return handler.isFluidValid(tank,stack);
+        }
+
+        @Override
+        public int fill(FluidStack resource, FluidAction action) {
+            return handler.fill(resource,action);
+        }
+
+        @NotNull
+        @Override
+        public FluidStack drain(FluidStack resource, FluidAction action) {
+            return handler.drain(resource,action);
+        }
+
+        @NotNull
+        @Override
+        public FluidStack drain(int maxDrain, FluidAction action) {
+            return handler.drain(maxDrain, action);
+        }
+
+        @Override
+        public void setStackInSlot(int slot, @NotNull ItemStack stack) {
+            handler.setStackInSlot(slot,stack);
+        }
+
+        @Override
+        public int getSlots() {
+            return handler.getSlots();
+        }
+
+        @NotNull
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return handler.getStackInSlot(slot);
+        }
+
+        @NotNull
+        @Override
+        public ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
+            if (slot != BrewingHandler.BOTTLE_OUTPUT) {
+                return handler.insertItem(slot, stack, simulate);
+            }return stack;
+        }
+
+        @NotNull
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (slot == BrewingHandler.BOTTLE_OUTPUT) {
+                return handler.extractItem(slot, amount, simulate);
+            }
+            return ItemStack.EMPTY;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return handler.getSlotLimit(slot);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            return handler.isItemValid(slot, stack);
+        }
+    }
+
     @NotNull
     @Override
     public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+        if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+            return optional.cast();
+        }
         return super.getCapability(cap, side);
     }
 }

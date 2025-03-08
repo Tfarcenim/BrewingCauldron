@@ -23,6 +23,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import tfar.brewingcauldron.BrewingCauldronBlockEntity;
+import tfar.brewingcauldron.BrewingCauldronConfig;
 import tfar.brewingcauldron.Init;
 
 public class ModClient {
@@ -58,7 +59,7 @@ public class ModClient {
     }
 
     public static final IIngameOverlay overlay = (gui, poseStack, v, i, i1) -> {
-        if (!Minecraft.getInstance().options.hideGui) {
+        if (!Minecraft.getInstance().options.hideGui && BrewingCauldronConfig.INSTANCE.HAS_OVERLAY.get()) {
             gui.setupOverlayRenderState(true, false);
             HitResult hitResult = Minecraft.getInstance().hitResult;
             if (hitResult instanceof BlockHitResult blockHitResult && blockHitResult.getType() != HitResult.Type.MISS) {

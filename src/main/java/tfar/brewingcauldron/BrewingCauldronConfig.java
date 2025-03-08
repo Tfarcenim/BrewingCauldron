@@ -16,9 +16,13 @@ public class BrewingCauldronConfig {
     }
 
     public final ForgeConfigSpec.BooleanValue HAS_GUI;
+
+    public final ForgeConfigSpec.BooleanValue HAS_OVERLAY;
+
     public BrewingCauldronConfig(ForgeConfigSpec.Builder builder){
         builder.push("general");
         HAS_GUI = builder.define("has_gui",true);
+        HAS_OVERLAY = builder.define("has_overlay",true);
         builder.pop();
 
     }
