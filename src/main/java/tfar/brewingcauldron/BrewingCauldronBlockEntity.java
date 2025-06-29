@@ -195,8 +195,18 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         wrapper.set(3, ingredient);
 
         ItemStack stack = wrapper.get(0);
+
+
+
         FluidStack fluidStack = new FluidStack(Init.ModFluids.POTION, FluidAttributes.BUCKET_VOLUME);
         fluidStack.setTag(stack.getTag());
+
+        PotionType potionType = PotionType.fromItem(stack.getItem());
+
+
+        if (potionType != null && fluidStack.hasTag()) {
+            fluidStack.getTag().putString("PotionType",potionType.name());
+        }
 
         handler.setFluidInSlot(0,fluidStack);
 
@@ -215,7 +225,9 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
                  potion= Potions.WATER;
             }
 
-            ItemStack potionStack = PotionUtils.setPotion(Items.POTION.getDefaultInstance(),potion);
+            PotionType potionType = PotionUtils2.getPotionType(fluidStack);
+
+            ItemStack potionStack = PotionUtils.setPotion(potionType.item.getDefaultInstance(),potion);
             return BrewingRecipeRegistry.hasOutput(potionStack,handler.getStackInSlot(BrewingHandler.INGREDIENT));
         } else {
             return false;
@@ -233,7 +245,10 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
             } else {
                 potion = Potions.WATER;
             }
-            potionStack = PotionUtils.setPotion(Items.POTION.getDefaultInstance(),potion);
+
+
+            PotionType potionType = PotionUtils2.getPotionType(fluidStack);
+            potionStack = PotionUtils.setPotion(potionType.item.getDefaultInstance(),potion);
         }
 
         if (!potionStack.isEmpty()) {
@@ -309,6 +324,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         handler.deserializeNBT(nbt.getCompound("handler"));
         this.brewTime = nbt.getShort("BrewTime");
         this.fuel = nbt.getByte("Fuel");
+
         super.load(nbt);
         if (hasLevel())
             level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);

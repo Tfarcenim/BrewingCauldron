@@ -15,12 +15,13 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
+import tfar.brewingcauldron.block.CauldronInteractions;
 
 import java.util.Collection;
 import java.util.List;
@@ -76,7 +77,7 @@ public class PotionUtils2 {
     }
 
 
-    private static final Component NO_EFFECT = (new TranslatableComponent("effect.none")).withStyle(ChatFormatting.GRAY);
+    private static final Component NO_EFFECT = new TranslatableComponent("effect.none").withStyle(ChatFormatting.GRAY);
 
     /**
      * Adds the tooltip of the {@code Potion} stored on the {@code ItemStack} along a "durationFactor"
@@ -116,7 +117,7 @@ public class PotionUtils2 {
 
         if (!list1.isEmpty()) {
             pTooltips.add(TextComponent.EMPTY);
-            pTooltips.add((new TranslatableComponent("potion.whenDrank")).withStyle(ChatFormatting.DARK_PURPLE));
+            pTooltips.add(new TranslatableComponent("potion.whenDrank").withStyle(ChatFormatting.DARK_PURPLE));
 
             for(Pair<Attribute, AttributeModifier> pair : list1) {
                 AttributeModifier attributemodifier2 = pair.getSecond();
@@ -129,23 +130,30 @@ public class PotionUtils2 {
                 }
 
                 if (d0 > 0.0D) {
-                    pTooltips.add((new TranslatableComponent("attribute.modifier.plus." + attributemodifier2.getOperation().toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(d1), new TranslatableComponent(pair.getFirst().getDescriptionId()))).withStyle(ChatFormatting.BLUE));
+                    pTooltips.add(new TranslatableComponent("attribute.modifier.plus." + attributemodifier2.getOperation().toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(d1), new TranslatableComponent(pair.getFirst().getDescriptionId())).withStyle(ChatFormatting.BLUE));
                 } else if (d0 < 0.0D) {
                     d1 *= -1.0D;
-                    pTooltips.add((new TranslatableComponent("attribute.modifier.take." + attributemodifier2.getOperation().toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(d1), new TranslatableComponent(pair.getFirst().getDescriptionId()))).withStyle(ChatFormatting.RED));
+                    pTooltips.add(new TranslatableComponent("attribute.modifier.take." + attributemodifier2.getOperation().toValue(), ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(d1), new TranslatableComponent(pair.getFirst().getDescriptionId())).withStyle(ChatFormatting.RED));
                 }
             }
         }
     }
 
+    public static PotionType getPotionType(FluidStack stack) {
+        return stack.hasTag() ? PotionType.valueOf(stack.getTag().getString("PotionType")):PotionType.REGULAR;
+    }
+
     public static boolean haveSameEffects(ItemStack stack, FluidStack fluidStack) {
         Potion itemPotion = PotionUtils.getPotion(stack);
-        Potion fluidPotion = fluidStack.getFluid() == Fluids.WATER ? Potions.WATER : PotionUtils.getPotion(fluidStack.getTag());
+        Potion fluidPotion = CauldronInteractions.isWater(fluidStack) ? Potions.WATER : PotionUtils.getPotion(fluidStack.getTag());
 
         List<MobEffectInstance> customEffectsItem = PotionUtils.getCustomEffects(stack);
         List<MobEffectInstance> customEffectsFluid = PotionUtils.getCustomEffects(fluidStack.getTag());
 
-        return (itemPotion == fluidPotion && Objects.equals(customEffectsItem,customEffectsFluid));
+        Item item = stack.getItem();
+        PotionType potionType = getPotionType(fluidStack);
+
+        return itemPotion == fluidPotion && Objects.equals(customEffectsItem,customEffectsFluid) && potionType != null && potionType.isValid(item);
 
     }
 
