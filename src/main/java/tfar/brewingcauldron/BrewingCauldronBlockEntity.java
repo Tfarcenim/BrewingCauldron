@@ -94,7 +94,7 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
         boolean flag1 = brewTime > 0;
         ItemStack itemstack1 = handler.getStackInSlot(BrewingHandler.INGREDIENT);
         if (flag1) {
-            ((ServerLevel)level).sendParticles(ParticleTypes.BUBBLE, (double)worldPosition.getX() + level.random.nextDouble(), (double)(worldPosition.getY() + 1), (double)worldPosition.getZ() + level.random.nextDouble(), 1, 0.0D, 0.01D, 0.0D, 0.2D);
+            ((ServerLevel)level).sendParticles(ParticleTypes.BUBBLE, worldPosition.getX() + level.random.nextDouble(), worldPosition.getY() + 1, worldPosition.getZ() + level.random.nextDouble(), 1, 0, 0.01, 0, 0.2);
             --brewTime;
             boolean flag2 = brewTime == 0;
             if (flag2 && flag) {

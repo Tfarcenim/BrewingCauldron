@@ -137,6 +137,11 @@ public class CauldronInteractions {
         return InteractionResult.sidedSuccess(pLevel.isClientSide);
     }
 
+    public static boolean isWater(FluidStack stack) {
+        return stack.getFluid().isSame(Fluids.WATER) || (stack.getFluid().isSame(Init.ModFluids.POTION) &&
+                PotionUtils.getPotion(stack.getTag()) == Potions.WATER);
+    }
+
     public static void bootStrap() {
         addDefaultInteractions(EMPTY_BREWING);
         EMPTY_BREWING.put(Init.ModItems.POTION_BUCKET,(pBlockState, pLevel, pBlockPos, pPlayer, pHand, pStack) -> {
@@ -206,6 +211,9 @@ public class CauldronInteractions {
                 if (!level.isClientSide) {
                     BlockEntity be = level.getBlockEntity(pos);
                     if (be instanceof BrewingCauldronBlockEntity brewingBE) {
+
+
+
                         if (PotionUtils2.haveSameEffects(stack, brewingBE.handler.getFluidInTank(0))) {
                             player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.GLASS_BOTTLE)));
                             player.awardStat(Stats.USE_CAULDRON);

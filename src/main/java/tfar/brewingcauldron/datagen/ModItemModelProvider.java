@@ -25,6 +25,7 @@ public class ModItemModelProvider extends ItemModelProvider {
                 .customLoader(DynamicBucketModelBuilder::begin)
                 .fluid(Init.ModFluids.POTION)
                 .applyTint(false)
+                .coverIsMask(true)
                 .end();
     }
 
@@ -32,6 +33,11 @@ public class ModItemModelProvider extends ItemModelProvider {
         singleTexture(path, new ResourceLocation("item/generated"),
                 "layer0", modLoc("item/" + path));
     }
+
+    private void generatedItem(RegistryObject<? extends Item> item) {
+        generatedItem(item.getId().getPath());
+    }
+
 
     protected void makeSimpleBlockItem(Item item, ResourceLocation loc) {
         String s = Registry.ITEM.getKey(item).toString();
@@ -43,8 +49,5 @@ public class ModItemModelProvider extends ItemModelProvider {
         makeSimpleBlockItem(item, modLoc("block/" + Registry.ITEM.getKey(item).getPath()));
     }
 
-    private void generatedItem(RegistryObject<? extends Item> item) {
-        generatedItem(item.getId().getPath());
-    }
 
 }

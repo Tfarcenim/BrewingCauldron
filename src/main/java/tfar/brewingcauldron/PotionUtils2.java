@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.fluids.FluidStack;
 
 import java.util.Collection;
@@ -64,7 +65,7 @@ public class PotionUtils2 {
 
     /**
      * Gets the integer color of an {@code ItemStack} as defined by it's stored potion color tag
-     * @param pStack the passed {@code ItemStack}
+     * @param tag the passed {@code CompoundTag}
      */
     public static int getColor(CompoundTag tag) {
         if (tag != null && tag.contains("CustomPotionColor", 99)) {
@@ -79,7 +80,7 @@ public class PotionUtils2 {
 
     /**
      * Adds the tooltip of the {@code Potion} stored on the {@code ItemStack} along a "durationFactor"
-     * @param pStack the passed {@code ItemStack}
+     * @param tag the passed {@code CompoundTag}
      * @param pTooltips the passed list of current {@code Component} tooltips
      * @param pDurationFactor the passed durationFactor of the {@code Potion}
      */
@@ -139,7 +140,7 @@ public class PotionUtils2 {
 
     public static boolean haveSameEffects(ItemStack stack, FluidStack fluidStack) {
         Potion itemPotion = PotionUtils.getPotion(stack);
-        Potion fluidPotion = PotionUtils.getPotion(fluidStack.getTag());
+        Potion fluidPotion = fluidStack.getFluid() == Fluids.WATER ? Potions.WATER : PotionUtils.getPotion(fluidStack.getTag());
 
         List<MobEffectInstance> customEffectsItem = PotionUtils.getCustomEffects(stack);
         List<MobEffectInstance> customEffectsFluid = PotionUtils.getCustomEffects(fluidStack.getTag());

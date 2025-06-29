@@ -46,6 +46,12 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
         };
     }
 
+    @Override
+    public int getSlotLimit(int slot) {
+        return slot == INGREDIENT && BrewingCauldronConfig.INSTANCE.LIMIT_INGREDIENTS.get() ? 1 :
+                super.getSlotLimit(slot);
+    }
+
     public ItemStack getIngredient() {
         return getStackInSlot(INGREDIENT);
     }

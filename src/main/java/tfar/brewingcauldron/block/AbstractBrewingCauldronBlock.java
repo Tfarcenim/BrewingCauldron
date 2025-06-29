@@ -21,6 +21,7 @@ import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import org.jetbrains.annotations.Nullable;
 import tfar.brewingcauldron.BrewingCauldronBlockEntity;
 import tfar.brewingcauldron.BrewingCauldronConfig;
+import tfar.brewingcauldron.BrewingHandler;
 
 import java.util.Map;
 
@@ -53,8 +54,8 @@ public abstract class AbstractBrewingCauldronBlock extends AbstractCauldronBlock
 
                 if (BrewingRecipeRegistry.isValidIngredient(itemstack) && BCBE.handler.getIngredient().isEmpty()) {
                     if (!pLevel.isClientSide) {
-                        BCBE.handler.setIngredient(itemstack);
-                        pPlayer.setItemInHand(pHand, ItemStack.EMPTY);
+                        ItemStack remaining = BCBE.handler.insertItem(BrewingHandler.INGREDIENT,itemstack,false);
+                        pPlayer.setItemInHand(pHand, remaining);
                     }
                     return InteractionResult.sidedSuccess(pLevel.isClientSide);
                 }
