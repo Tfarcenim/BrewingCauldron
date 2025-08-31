@@ -10,6 +10,7 @@ import net.minecraftforge.fluids.FluidAttributes;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
+import tfar.brewingcauldron.block.CauldronInteractions;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -113,7 +114,15 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
             return FluidStack.EMPTY;
         }
 
-        if (!fluidStack.isEmpty() && fluidStack.isFluidEqual(resource)) {
+        if (CauldronInteractions.isWater(fluidStack) && CauldronInteractions.isWater(resource)) {
+            FluidStack water = new FluidStack(Fluids.WATER,FluidAttributes.BUCKET_VOLUME);
+            if (action.execute()) {
+                setFluidInSlot(0,FluidStack.EMPTY);
+            }
+            return water;
+        }
+
+        else if (!fluidStack.isEmpty() && fluidStack.isFluidEqual(resource)) {
             FluidStack copy = fluidStack.copy();
             if (action.execute()) {
                 setFluidInSlot(0,FluidStack.EMPTY);
@@ -133,6 +142,14 @@ public class BrewingHandler extends ItemStackHandler implements IFluidHandlerMod
     public FluidStack drain(int maxDrain, FluidAction action) {
         if (maxDrain < FluidAttributes.BUCKET_VOLUME|| !isFull()) {
             return FluidStack.EMPTY;
+        }
+
+        if (CauldronInteractions.isWater(fluidStack)) {
+            FluidStack water = new FluidStack(Fluids.WATER,FluidAttributes.BUCKET_VOLUME);
+            if (action.execute()) {
+                setFluidInSlot(0,FluidStack.EMPTY);
+            }
+            return water;
         }
 
         if (!fluidStack.isEmpty()) {

@@ -6,7 +6,7 @@ import net.minecraft.world.item.Items;
 public enum PotionType {
     REGULAR(Items.POTION), SPLASH(Items.SPLASH_POTION), LINGERING(Items.LINGERING_POTION);
 
-    final Item item;
+    public final Item item;
 
     PotionType(Item item) {
         this.item = item;

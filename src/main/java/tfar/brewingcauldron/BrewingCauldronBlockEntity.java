@@ -304,7 +304,9 @@ public class BrewingCauldronBlockEntity extends BlockEntity implements MenuProvi
     public void setChanged() {
         super.setChanged();
         updateAppearance();
-        level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(), Block.UPDATE_ALL);
+        if (level != null) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
     }
 
     @Override

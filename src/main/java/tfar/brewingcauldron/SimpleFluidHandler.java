@@ -50,13 +50,13 @@ public class SimpleFluidHandler implements IFluidHandlerModifiable {
     @NotNull
     @Override
     public FluidStack drain(FluidStack resource, FluidAction action) {
-        return null;
+        return FluidStack.EMPTY;
     }
 
     @NotNull
     @Override
     public FluidStack drain(int maxDrain, FluidAction action) {
-        return null;
+        return FluidStack.EMPTY;
     }
 
     @Override
